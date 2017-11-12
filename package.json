@@ -7,9 +7,11 @@
     "test": "jest"
   },
   "dependencies": {
-    "master-fox-client": "https://git@github.com/jamiebikies/ember-pusher.git",
+    "master-fox-client": "git+ssh://git@github.com/Foodee/master-fox-client.git",
+    "moment": "^2.19.2",
     "react": "^16.0.0",
     "react-native": "0.50.3",
+    "react-native-elements": "^0.18.2",
     "react-native-vector-icons": "^4.4.2",
     "react-navigation": "^1.0.0-beta.19",
     "react-redux": "^5.0.6",
