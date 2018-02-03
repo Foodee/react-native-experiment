@@ -11,7 +11,9 @@ export async function masterFoxClient(){
 
 export const login = async (email, password) => {
     const masterFox = await MasterFox.login(ROOT_URL, email, password);
+
     await AsyncStorage.setItem(API_KEY, masterFox.apiKey);
+
     return masterFox;
 };
 

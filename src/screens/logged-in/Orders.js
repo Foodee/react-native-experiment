@@ -1,9 +1,12 @@
 // libraries
 import React, { Component } from "react";
 import {
-  Animated, Button,
+  Animated,
+  Button,
   Dimensions,
+  FlatList,
   Image,
+  ScrollView,
   StatusBar,
   StyleSheet,
   Text,
@@ -38,7 +41,10 @@ const TOOLBAR_HEIGHT = 60;
 const COVER_HEIGHT = 150;
 const PULL_TO_REFRESH_HEIGHT = 100;
 
-let restaurantId = 330;
+let restaurantId = 8;
+
+const AnimatedScrollView = Animated.createAnimatedComponent(ScrollView);
+const AnimatedFlatList = Animated.createAnimatedComponent(FlatList);
 
 class Orders extends Component {
 
@@ -134,7 +140,7 @@ class Orders extends Component {
           subtitle={this.state.restaurant.subtitle}
         />
 
-        <Animated.ScrollView
+        <AnimatedScrollView
           scrollEventThrottle={1}
           onScroll={this.onScroll}
           style={{position: 'absolute', top: 0, right: 0, bottom: 0, left: 0, paddingTop: COVER_HEIGHT - 25, zIndex: 1}}
@@ -186,7 +192,7 @@ class Orders extends Component {
                 )
             }
           </View>
-        </Animated.ScrollView>
+        </AnimatedScrollView>
       </View>
     )
   }
