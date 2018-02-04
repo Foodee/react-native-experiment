@@ -1,20 +1,18 @@
 // libraries
-import React, { Component } from "react";
+import React, {Component} from "react";
 import {
   Animated,
   Button,
   Dimensions,
-  FlatList,
   Image,
-  ScrollView,
   StatusBar,
   StyleSheet,
-  Text,
+  Text, TouchableOpacity,
   View,
 } from 'react-native';
+import Icon from 'react-native-vector-icons/FontAwesome';
 import RefreshableToolbar from "../../components/RefreshableToolbar";
 import {masterFoxClient} from "../../util/Auth";
-import {Card} from "react-native-elements";
 import moment from "moment";
 import Colors from "../../constants/colors";
 
@@ -33,18 +31,39 @@ let styles = StyleSheet.create({
   background: {
     color: 'red',
   },
+  item: {
+    paddingLeft: 15,
+    paddingRight: 15,
+    paddingTop: 10,
+    paddingBottom: 10,
+    backgroundColor: '#FFFFFF',
+    borderBottomWidth: 1,
+    borderBottomColor: '#DDDDDD',
+    display: 'flex',
+    flexDirection: 'row'
+  },
+  footer: {
+    display: 'flex',
+    flexDirection: 'row',
+    backgroundColor: Colors.FOODEE_RED,
+    position: 'absolute',
+    bottom: 0,
+    right: 0,
+    left: 0,
+    paddingLeft: 15,
+    paddingRight: 15,
+    paddingTop: 10,
+    paddingBottom: 10,
+    zIndex: 100
+  }
 });
 
 
-const FOODEE_RED = '#9D2524';
 const TOOLBAR_HEIGHT = 60;
 const COVER_HEIGHT = 150;
 const PULL_TO_REFRESH_HEIGHT = 100;
 
 let restaurantId = 8;
-
-const AnimatedScrollView = Animated.createAnimatedComponent(ScrollView);
-const AnimatedFlatList = Animated.createAnimatedComponent(FlatList);
 
 class Orders extends Component {
 
@@ -57,7 +76,8 @@ class Orders extends Component {
     shouldRefresh: false,
     restaurant: {},
     orders: [],
-    scale: new Animated.Value(1)
+    scale: new Animated.Value(1),
+    date: moment()
   };
 
   yPosition = new Animated.Value(0);
@@ -103,10 +123,11 @@ class Orders extends Component {
 
     const orders = await client.restaurants.from(restaurantId).index.orders({
       filter: {
-        deliverOn: moment().format('YYYY-MM-DD')
+        deliverOn: this.state.date.format('YYYY-MM-DD')
       },
-      include: 'order-items.menu-item'
+      include: 'order-items.menu-item.menu-group,order-items.menu-option-items.menu-option-group'
     });
+
     this.setState({orders});
   };
 
@@ -140,14 +161,14 @@ class Orders extends Component {
           subtitle={this.state.restaurant.subtitle}
         />
 
-        <AnimatedScrollView
+        <Animated.ScrollView
           scrollEventThrottle={1}
           onScroll={this.onScroll}
           style={{position: 'absolute', top: 0, right: 0, bottom: 0, left: 0, paddingTop: COVER_HEIGHT - 25, zIndex: 1}}
           onResponderRelease={this._handleRelease}
         >
 
-          <View>
+          <View style={{paddingBottom: 800}}>
             <View style={{display: 'flex', flexDirection: 'row'}}>
               <Animated.Image
                 source={{uri: this.state.restaurant.thumbnailImageUrl}}
@@ -169,34 +190,89 @@ class Orders extends Component {
 
             </View>
 
-
-            {this.state.orders.length > 0
-             ? this.state.orders.map(
-               order =>
-                <Card
-                  key={order.identifier}
-                >
-                  <Button
-                    color={Colors.FOODEE_RED}
-                    backgroundColor='transparent'
-                    title={order.identifier}
-                    onPress={() => this.props.navigation.navigate('Order', { order: order })}
-                  />
-                </Card>
-              )
-             :(
-               <Image
-                  style={{width: width / 2, height: height / 2, marginLeft: 'auto', marginRight: 'auto'}}
-                  source={require('../../img/empty-pink.png')}
-                />
-                )
-            }
+            {this.renderOrders()}
           </View>
-        </AnimatedScrollView>
+        </Animated.ScrollView>
+
+        {this.renderFooter()}
       </View>
     )
+  }
+
+  renderOrders() {
+    return this.state.orders.length > 0 ?
+      this.state.orders.map(_ => this.renderOrder(_)) : this.renderEmptyState();
+  }
+
+  renderOrder(order) {
+    return (
+      <TouchableOpacity
+        key={order.identifier}
+        onPress={() => this.props.navigation.navigate('Order', {order: order})}
+      >
+        <View
+          style={styles.item}
+        >
+          <View style={{flex: 1}}>
+            <Text>
+              {order.identifier}
+            </Text>
+            <Text>
+              {order.numberOfPeople} people @ {moment(order.pickupAt).format('HH:MM a')}
+            </Text>
+          </View>
+          <Icon
+            name="angle-right"
+            color={Colors.FOODEE_PINK}
+            size={30}
+          />
+        </View>
+      </TouchableOpacity>
+    );
+  }
+
+  renderEmptyState() {
+    return (
+      <Image
+        style={{width: width, height: height / 2, marginLeft: 'auto', marginRight: 'auto'}}
+        source={require('../../img/empty-pink.png')}
+      />
+    );
+  }
+
+  renderFooter() {
+    return (
+      <View style={styles.footer}>
+        <Icon
+          name="angle-left"
+          color={Colors.FOODEE_PINK}
+          size={30}
+          onPress={() => {
+            this.setState({date: moment(this.state.date).subtract(1, 'days')});
+            this._fetchData();
+          }}
+        />
+        <View style={{flex: 1, display: 'flex', alignContent: 'center', justifyContent: 'center'}}>
+          <Text style={{color: 'white', textAlign: 'center', fontWeight: 'bold'}}>
+            {this.state.date.format('MMMM Do YYYY')}
+          </Text>
+        </View>
+
+        <Icon
+          name="angle-right"
+          color={Colors.FOODEE_PINK}
+          size={30}
+          onPress={() => {
+            this.setState({date: moment(this.state.date).add(1, 'days')});
+            this._fetchData();
+          }}
+        />
+      </View>
+    );
   }
 }
 
 export default Orders;
+
+
 

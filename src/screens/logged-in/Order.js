@@ -1,46 +1,113 @@
 // libraries
-import React, { Component } from "react";
+import React, {Component} from "react";
 import {
-  Animated,
+  SectionList,
   Dimensions,
-  Image,
-  StatusBar,
   StyleSheet,
   Text,
-  View,
+  View, ListItem,
 } from 'react-native';
-import RefreshableToolbar from "../../components/RefreshableToolbar";
+
 import {masterFoxClient} from "../../util/Auth";
-import {Card} from "react-native-elements";
+import {Header} from "react-navigation";
+
+import Colors from "../../constants/colors";
 import moment from "moment";
 
 const {height, width} = Dimensions.get('window');
 
 let styles = StyleSheet.create({
-  container: {
-    borderRadius: 4,
-    borderWidth: 0.5,
-    borderColor: '#d6d7da',
+  item: {
+    paddingLeft: 15,
+    paddingRight: 15,
+    paddingTop: 10,
+    paddingBottom: 10,
+    backgroundColor: '#FFFFFF',
+    borderBottomWidth: 1,
+    borderBottomColor: '#DDDDDD'
   },
-  title: {
-    fontSize: 19,
-    fontWeight: 'bold',
+  section: {
+    padding: 5,
+    backgroundColor: Colors.FOODEE_RED
   },
-  background: {
-    color: 'red',
-  },
+  sectionText: {
+    color: 'white',
+    fontWeight: 'bold'
+  }
 });
 
 export default class extends Component {
 
-  static navigationOptions = ({ navigation }) => ({
-    title: `Order ${navigation.state.params.order.identifier}`,
+  static navigationOptions = ({navigation}) => ({
+    title: `${navigation.state.params.order.identifier} @ ${moment(navigation.state.params.order.pickupAt).format('hh:mm a')}`
   });
+
+  renderItem = ({item}) => {
+    return (
+      <View style={styles.item}>
+        <Text>{`${item.quantity}x ${item.menuItem.name}`}</Text>
+        {item.menuOptionItems.map(_ => (<Text key={_.id}> {this.renderMoi(_)}</Text>))}
+      </View>
+    );
+  };
+
+  renderSectionHeader = ({section}) => {
+    return (
+      <View style={styles.section}>
+        <Text style={styles.sectionText}>
+          {section.title}
+        </Text>
+      </View>
+    )
+  };
+
+  renderMoi(moi){
+    let ret;
+    const mog = moi.menuOptionGroup;
+    const verb = mog.verb;
+
+    if (verb === 'pick'){
+      ret = ` • ${verb} ${moi.name} ${mog.name}`
+    }
+    else if (verb === 'substitute') {
+      ret = ` • ${verb} ${mog.name} with ${moi.name}`
+    } else {
+      ret = ` • ${verb} ${moi.name}`
+    }
+
+    return ret;
+  }
 
   render() {
 
+    const {params} = this.props.navigation.state;
+
+    const order = params.order;
+
+    const groupedByMenuGroup = order
+      .orderItems
+      .reduce((acc, orderItem) => {
+
+        const orderItemsMenuGroup = acc[orderItem.menuItem.menuGroup.id] || {
+          id: orderItem.menuItem.menuGroup.id,
+          title: orderItem.menuItem.menuGroup.name,
+          data: []
+        };
+
+        orderItemsMenuGroup.data.push(orderItem);
+
+        acc[orderItem.menuItem.menuGroup.id] = orderItemsMenuGroup;
+
+        return acc;
+      }, {});
+
     return (
-      <Text h1>Hello</Text>
+      <SectionList
+        renderItem={this.renderItem}
+        renderSectionHeader={this.renderSectionHeader}
+        sections={Object.values(groupedByMenuGroup)}
+        keyExtractor={(item, _) => item.id}
+      />
     )
 
   }

@@ -153,11 +153,10 @@ class RefreshableToolbar extends Component {
           width: WINDOW_WIDTH,
           height: WINDOW_HEIGHT,
           transform: [{translateY: interpolateToolbarTranslateY}],
-          zIndex: (this.state.height <= this.props.toolbarHeight) ? 100 : 0,
+          zIndex: (this.state.height <= this.props.toolbarHeight + 10) ? 100 : 0,
           backgroundColor: 'black'
         }}
       >
-
         <Animated.Image
           source={{uri: this.props.coverUrl}}
           style={{
@@ -184,7 +183,6 @@ class RefreshableToolbar extends Component {
           }}
         >
           <Icon name="arrow-down" color="white" size={30}/>
-
         </Animated.View>
 
 
